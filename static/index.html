@@ -98,16 +98,19 @@ var context = canvas.getContext("2d");
 var W = window.innerWidth-20;
 var H = window.innerHeight-50;
 
+// This code was taken from a post by user1693593 made on StackOverflow on May 14, 2015, retrieved on March 10 2023
 // https://stackoverflow.com/questions/30229536/how-to-make-a-html5-canvas-fit-dynamic-parent-flex-box-container
+
 var rect = canvas.parentNode.getBoundingClientRect();
 canvas.width = rect.width-50;
 canvas.height = rect.height-200;
 
 function sendJSONXMLHTTPRequest(url, objects, callback) {
+    // This code was modified from a tutorial about xmlhttprequest and callbacks by Ilya Kantor
+    // made on javascript.info on May 14 2022 and May 18 2022, retrieved on March 10 2023
+    // https://javascript.info/xmlhttprequest
+    // https://javascript.info/callbacks
     var xhr = new XMLHttpRequest();
-
-    // https://stackoverflow.com/questions/5223/length-of-a-javascript-object
-
     let methodType = ""
     xhr.responseType = 'json';
 
@@ -379,6 +382,9 @@ mouse.mouseuppers.push(function(x,y,clicked,e) {
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
     let color = document.getElementById('colorpicker').value;
+
+    // This code was taken from a post made by Giorgos Tsakonas on StackOverflow on Jul 22, 2014
+    // retrieved on March 10 2022
     // https://stackoverflow.com/questions/9618504/how-to-get-the-selected-radio-button-s-value
     let shape = document.querySelector('input[name="shape"]:checked').value;
     let size = document.querySelector('#sizepicker').value

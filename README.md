@@ -13,3 +13,9 @@ Contributors / Licensing
 Generally everything is LICENSE'D under the Apache 2 license by Abram Hindle.
 
 
+References
+==========
+
+Every website I used is cited in a comment above the code where I used it.
+
+I also talked about a problem I had with Adam Ahmed avahmed@ualberta.ca

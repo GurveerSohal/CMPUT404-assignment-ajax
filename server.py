@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 # Copyright 2013 Abram Hindle
-# 
+#
+# Copyright 2023 Gurveer Sohal
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -92,8 +94,11 @@ def update(entity):
     for key in request.json:
         myWorld.update(entity, key, data[key])
     
+    # Adam avahmed@ualberta.ca helped me fix this bug, of getting
+    # datetime.utcnow() instead of datetime.now(). The cache wasn't working
+    # properly earlier
     lastModified = datetime.utcnow()
-    print(lastModified.strftime('%a, %d %b %Y %H:%M:%S GMT'))
+
     return myWorld.get(entity)
 
 @app.route("/world", methods=['POST','GET'])    
@@ -101,9 +106,6 @@ def world():
 
     '''you should probably return the world here'''
     global lastModified
-    
-    print(lastModified.strftime('%a, %d %b %Y %H:%M:%S GMT'))
-
 
     return myWorld.world(), {
         "Last-Modified" : getHeaderTime(lastModified)
