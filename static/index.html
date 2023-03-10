@@ -85,7 +85,7 @@
                 </div>
 
                 <label for="sizepicker">Enter your size</label>
-                <input type="number" name="sizepicker" id="sizepicker" value="10">
+                <input type="number" name="sizepicker" id="sizepicker" value="10" max="100" min="10">
 
                 <button onclick="clearWorld()">Clear</button>
             </div>
@@ -162,7 +162,7 @@ serverURL = "http://127.0.0.1:5000"
 
 function clearWorld() {
     console.log('cleare');
-    // sendJSONXMLHTTPRequest(`${serverURL}/clear`, null, callbackForGet);
+    sendJSONXMLHTTPRequest(`${serverURL}/clear`, null, callbackForGet);
 }
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
@@ -253,7 +253,7 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just  modified!
-    // sendJSONXMLHTTPRequest(`${serverURL}/entity/${entity}`, data, callbackForPost)
+    sendJSONXMLHTTPRequest(`${serverURL}/entity/${entity}`, data, callbackForPost)
 }
 
 var counter = 0;
@@ -388,7 +388,7 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    // sendJSONXMLHTTPRequest(`${serverURL}/world`, null, callbackForGet);
+    sendJSONXMLHTTPRequest(`${serverURL}/world`, null, callbackForGet);
     drawFrame();
 }
 
