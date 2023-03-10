@@ -21,30 +21,119 @@
         limitations under the License.
     "/>
     <script src="json2.js"></script>
+    <style>
+        html {
+            height: 100%;
+        }
+        body {
+            background-color: aliceblue;
+            padding: 10pt;
+            height: 90%;
+        }
+
+        h1 {
+            text-align: center;
+        }
+        #menu {
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            background-color: aliceblue;
+            color: black;
+            flex-basis: 1;
+        }
+
+        #c {
+            -webkit-tap-highlight-color: transparent;
+            background-color: aliceblue;
+        }
+
+        #circleshape{
+            border-radius: 50%;
+            background-color: black;
+        }
+
+        #square {
+            background: black;
+            width: 10pt;
+            height: 10pt;
+            display: inline-block;
+        }
+
+        #circle {
+            background: black;
+            border-radius: 50%;
+            width: 10pt;
+            height: 10pt;
+            display: inline-block;
+        }
+    </style>
   </head> 
   <body bgcolor="black" height="100%" width="100%"> 
-    <canvas id="c" width="100%" height="100%" style="-webkit-tap-highlight-color: transparent;"></canvas> 
+        <h1>Drawing with AJAX</h1>
+
+            <div id="menu">
+                <label for="colorpicker">Pick your color</label>
+                <input type="color" name="colorpicker" id="colorpicker" value="#ffffff">
+
+                <div id="shapepicker">
+                    <legend>Pick your shape</legend>
+                    <label for="circleshape"><div id="circle"></div></label>
+                    <input type="radio" name="shape" id="circleshape" value="circle" checked>
+                    <label for="squareshape"><div id="square"></div></label>
+                    <input type="radio" name="shape" id="squareshape" value="square">
+                </div>
+
+                <label for="sizepicker">Enter your size</label>
+                <input type="number" name="sizepicker" id="sizepicker" value="10">
+
+                <button onclick="clearWorld()">Clear</button>
+            </div>
+            <canvas id="c""></canvas> 
+
     <script>
 var canvas = document.getElementById('c');
 var host = window.location.host;
 var context = canvas.getContext("2d");
-var W = canvas.width  = window.innerWidth-6;
-var H = canvas.height = window.innerHeight-50;
+var W = window.innerWidth-20;
+var H = window.innerHeight-50;
 
+// https://stackoverflow.com/questions/30229536/how-to-make-a-html5-canvas-fit-dynamic-parent-flex-box-container
+var rect = canvas.parentNode.getBoundingClientRect();
+canvas.width = rect.width-50;
+canvas.height = rect.height-200;
 
 function sendJSONXMLHTTPRequest(url, objects, callback) {
     var xhr = new XMLHttpRequest();
+
+    // https://stackoverflow.com/questions/5223/length-of-a-javascript-object
+
+    let methodType = ""
+    xhr.responseType = 'json';
+
+    if (objects === null) {
+        xhr.open("GET", url);
+        methodType = "GET";
+        xhr.send()
+    } else {
+        xhr.open("POST", url);
+        methodType = "POST";
+        let body = JSON.stringify(objects);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(body);
+    }
+
      xhr.onreadystatechange = function () {
          if (xhr.readyState==4) {
              try {
                  if (xhr.status==200) {
                      //XXX: parse some JSON from the request!
                      //XXX: Pass the data to the callback!
-                      console.log(xhr.getAllResponseHeaders());
+                    callback(xhr.response)
                  }
              } 
              catch(e) {
-                 alert('Error: ' + e.name);
+                 console.log(e);
              }
          }
      };
@@ -54,10 +143,27 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
     // Remember to use application/json !
 }
 
+function callbackForPost(responseBody) {
+    console.log("from post");
+    console.log(responseBody);
+}
+
+function callbackForGet(responseBody) {
+    console.log("from get");
+    console.log(responseBody);
+
+    world = responseBody
+    drawNext = true
+    drawFrame()
+}
 
 world = {};
 serverURL = "http://127.0.0.1:5000"
 
+function clearWorld() {
+    console.log('cleare');
+    // sendJSONXMLHTTPRequest(`${serverURL}/clear`, null, callbackForGet);
+}
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
     with(context) {
@@ -68,8 +174,14 @@ function drawCircle(context,entity) {
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-        stroke();                                
+
+
+        if (entity.shape === 'circle') {
+            arc(x, y, entity.size*0.5, 0, 2.0 * Math.PI, false);  
+        } else {
+            rect(x-5, y-5, entity.size, entity.size);
+        }
+        fill();                                
     }
 }
 
@@ -102,7 +214,7 @@ function renderFrame() {
 }
 
 var drawNext = true;
-
+var lastmodified = '';
 // Signals that there's something to be drawn
 function drawNextFrame() {
     drawNext = true;
@@ -141,30 +253,13 @@ function addEntity(entity, data) {
     world[entity] = data;
     drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just  modified!
-    console.log(`${serverURL}/entity/${entity}`);
-    let sendEntityToServer = async () => {
-        console.log(`${serverURL}/entity/${entity}`)
-        let response = await fetch(
-            `${serverURL}/entity/${entity}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type" : "application/json"
-                },
-                body : JSON.stringify(data),
-            }
-        )
-
-
-        console.log(response);
-    }
-
-    sendEntityToServer();
+    // sendJSONXMLHTTPRequest(`${serverURL}/entity/${entity}`, data, callbackForPost)
 }
 
 var counter = 0;
 function addEntityWithoutName(data) {
     //var name = "X"+Math.floor((Math.random()*100)+1);
-    var name = "X"+(counter++)%100;
+    var name = "X"+(counter++);
     addEntity(name,data);
 }
 
@@ -267,27 +362,38 @@ mouse = (function() {
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    let color = document.getElementById('colorpicker').value;
+    // https://stackoverflow.com/questions/9618504/how-to-get-the-selected-radio-button-s-value
+    let shape = document.querySelector('input[name="shape"]:checked').value;
+    let size = document.querySelector('#sizepicker').value
+    addEntityWithoutName({'x':x,'y':y,'colour':color, 'shape': shape, 'size': size});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    let color = document.getElementById('colorpicker').value;
+    // https://stackoverflow.com/questions/9618504/how-to-get-the-selected-radio-button-s-value
+    let shape = document.querySelector('input[name="shape"]:checked').value;
+    let size = document.querySelector('#sizepicker').value
+    addEntityWithoutName({'x':x,'y':y,'colour':color, 'shape': shape, 'size': size});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'#ffffff',
-                          'radius':10});
+    let color = document.getElementById('colorpicker').value;
+    // https://stackoverflow.com/questions/9618504/how-to-get-the-selected-radio-button-s-value
+    let shape = document.querySelector('input[name="shape"]:checked').value;
+    let size = document.querySelector('#sizepicker').value
+    addEntityWithoutName({'x':x,'y':y,'colour':color, 'shape': shape, 'size': size});
 });
 
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    sendJSONXMLHTTPRequest("http://127.0.0.1:5000")
+    // sendJSONXMLHTTPRequest(`${serverURL}/world`, null, callbackForGet);
     drawFrame();
 }
 
 // 30 frames per second
-setInterval( update, 1000/30.0);
+setInterval( update, 1000/30);
 
 
 

@@ -22,7 +22,7 @@
 
 
 import flask
-from flask import Flask, request
+from flask import Flask, request,redirect
 import json
 app = Flask(__name__)
 app.debug = True
@@ -77,23 +77,34 @@ def flask_post_json():
 @app.route("/")
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return render_template('static/index.html')
+    return redirect('/static/index.html')
+
+@app.route("/json2.js")
+def json2():
+    return render_template('static/json2.js')
 
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
+    global lastModified
     '''update the entities via this interface'''
     data = flask_post_json()
 
     for key in request.json:
         myWorld.update(entity, key, data[key])
     
-    lastModified = datetime.now()
-
+    lastModified = datetime.utcnow()
+    print(lastModified.strftime('%a, %d %b %Y %H:%M:%S GMT'))
     return myWorld.get(entity)
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
+
     '''you should probably return the world here'''
+    global lastModified
+    
+    print(lastModified.strftime('%a, %d %b %Y %H:%M:%S GMT'))
+
+
     return myWorld.world(), {
         "Last-Modified" : getHeaderTime(lastModified)
     }
