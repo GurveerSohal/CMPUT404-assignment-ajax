@@ -26,6 +26,8 @@ from flask import Flask, request
 import json
 app = Flask(__name__)
 app.debug = True
+from flask import render_template
+from datetime import datetime
 
 # An example world
 # {
@@ -58,6 +60,7 @@ class World:
 # curl -v   -H "Content-Type: application/json" -X PUT http://127.0.0.1:5000/entity/X -d '{"x":1,"y":1}' 
 
 myWorld = World()          
+lastModified = datetime.now()
 
 # I give this to you, this is how you get the raw body/data portion of a post in flask
 # this should come with flask but whatever, it's not my project.
@@ -74,27 +77,40 @@ def flask_post_json():
 @app.route("/")
 def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
-    return None
+    return render_template('static/index.html')
 
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    data = flask_post_json()
+
+    for key in request.json:
+        myWorld.update(entity, key, data[key])
+    
+    lastModified = datetime.now()
+
+    return myWorld.get(entity)
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
     '''you should probably return the world here'''
-    return None
+    return myWorld.world(), {
+        "Last-Modified" : getHeaderTime(lastModified)
+    }
+
+def getHeaderTime(datetimeObj):
+    return datetimeObj.strftime('%a, %d %b %Y %H:%M:%S GMT')
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    return myWorld.get(entity)
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    myWorld.clear()
+    return dict()
 
 if __name__ == "__main__":
     app.run()
